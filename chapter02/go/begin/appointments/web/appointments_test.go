@@ -118,6 +118,25 @@ func Test_API(t *testing.T) {
 		require.NotEmpty(t, appointments[0].ID)
 		require.Equal(t, appointments[0].PatientID, appointment.PatientID)
 	})
+
+	t.Run("Welcome", func(t *testing.T) {
+		// prepare
+		req, err := http.NewRequest(http.MethodGet, "/", nil)
+		require.NoError(t, err)
+
+		res, err := app.Test(req)
+		require.NoError(t, err)
+
+		defer res.Body.Close()
+
+		var welcome Welcome
+		err = json.NewDecoder(res.Body).Decode(&welcome)
+		require.NoError(t, err)
+
+		// assert
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.Equal(t, "Welcome to the Appointments API!", welcome.Message)
+	})
 }
 
 func appointmentFake() types.Appointment {
