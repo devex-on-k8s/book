@@ -42,13 +42,16 @@ func Test_API(t *testing.T) {
 
 		// arrange, act
 		req, err = http.NewRequest(http.MethodGet, "/appointments", nil)
+		require.NoError(t, err)
+
 		res, err = app.Test(req)
 		require.NoError(t, err)
 
 		defer res.Body.Close()
 
 		var appointments []types.Appointment
-		json.NewDecoder(res.Body).Decode(&appointments)
+		err = json.NewDecoder(res.Body).Decode(&appointments)
+		require.NoError(t, err)
 
 		// assert
 		require.NoError(t, err)
@@ -77,7 +80,7 @@ func Test_API(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		// assert
-		res, err = app.Test(req)
+		_, err = app.Test(req)
 		require.NoError(t, err)
 
 		// get
@@ -91,19 +94,20 @@ func Test_API(t *testing.T) {
 		defer res.Body.Close()
 
 		var appointments []types.Appointment
-		json.NewDecoder(res.Body).Decode(&appointments)
+		err = json.NewDecoder(res.Body).Decode(&appointments)
+		require.NoError(t, err)
 
 		// assert
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.Equal(t, 1, len(appointments))
-		require.NotEmpty(t, appointments[0].Id)
-		require.Equal(t, appointments[0].PatientId, appointment.PatientId)
+		require.Len(t, appointments, 1)
+		require.NotEmpty(t, appointments[0].ID)
+		require.Equal(t, appointments[0].PatientID, appointment.PatientID)
 	})
 }
 
 func appointmentFake() types.Appointment {
 	return types.Appointment{
-		PatientId:       "test-patient",
+		PatientID:       "test-patient",
 		AppointmentDate: time.Now(),
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
+	// blank import to register the postgres driver
 	_ "github.com/lib/pq"
 
 	"github.com/devex-on-k8s/book/appointments/db"
@@ -73,7 +74,7 @@ func (s *Server) Welcome(ctx fiber.Ctx) error {
 }
 
 const (
-	ApplicationJson = "application/json"
+	ApplicationJSON = "application/json"
 	ContentType     = "Content-Type"
 )
 

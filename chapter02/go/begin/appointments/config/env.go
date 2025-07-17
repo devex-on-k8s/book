@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	VERSION            = getEnv("VERSION", "0.0.1-SNAPSHOT")
-	SOURCE             = getEnv("SOURCE", "https://github.com/")
-	APP_PORT           = getEnv("APP_PORT", "8081")
+	Version            = getEnv("VERSION", "0.0.1-SNAPSHOT")
+	Source             = getEnv("SOURCE", "https://github.com/")
+	AppPort            = getEnv("APP_PORT", "8081")
 	PostgresqlHost     = getEnv("POSTGRES_HOST", "localhost")
 	PostgresqlPort     = getEnv("POSTGRES_PORT", "5432")
 	PostgresqlDatabase = getEnv("POSTGRES_DB", "postgres")

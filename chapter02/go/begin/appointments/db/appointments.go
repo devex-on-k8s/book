@@ -56,7 +56,7 @@ func GetAll(db *sql.DB) ([]types.Appointment, error) {
 	appointments := []types.Appointment{}
 	for rows.Next() {
 		var appointment types.Appointment
-		err = rows.Scan(&appointment.Id, &appointment.PatientId, &appointment.AppointmentDate)
+		err = rows.Scan(&appointment.ID, &appointment.PatientID, &appointment.AppointmentDate)
 		if err != nil {
 			return nil, fmt.Errorf("scan rows: %w", err)
 		}
@@ -83,11 +83,11 @@ func DeleteAll(db *sql.DB) error {
 
 // CreateAppointment creates a new appointment.
 func CreateAppointment(db *sql.DB, appointment *types.Appointment) error {
-	appointment.Id = uuid.New().String()
+	appointment.ID = uuid.New().String()
 
 	insertStmt := `insert into Appointments(id, patientId, appointmentDate) values($1, $2, $3)`
 
-	_, err := db.Exec(insertStmt, appointment.Id, appointment.PatientId, appointment.AppointmentDate)
+	_, err := db.Exec(insertStmt, appointment.ID, appointment.PatientID, appointment.AppointmentDate)
 	if err != nil {
 		return fmt.Errorf("execute insert: %w", err)
 	}

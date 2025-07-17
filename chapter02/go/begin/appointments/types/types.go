@@ -6,8 +6,8 @@ import (
 )
 
 type Appointment struct {
-	Id              string    `json:"id"`
-	PatientId       string    `json:"patientId"`
+	ID              string    `json:"id"`
+	PatientID       string    `json:"patientId"`
 	AppointmentDate time.Time `json:"appointmentDate"`
 }
 

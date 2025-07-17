@@ -41,7 +41,7 @@ func main() {
 
 	// Listen from a different goroutine
 	go func() {
-		if err := app.Listen(fmt.Sprintf(":%v", config.APP_PORT)); err != nil {
+		if err := app.Listen(fmt.Sprintf(":%v", config.AppPort)); err != nil {
 			log.Panic(err)
 		}
 	}()
