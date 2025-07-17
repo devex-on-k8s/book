@@ -1,6 +1,6 @@
 //go:build !dev
 
-package main
+package config
 
 import (
 	"github.com/gofiber/fiber/v3"

@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"bytes"
@@ -8,13 +8,16 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/devex-on-k8s/book/appointments/config"
+	"github.com/devex-on-k8s/book/appointments/types"
 )
 
 // testAppConfig returns a httptest.Server for testing.
-func testAppConfig(t *testing.T) *AppConfig {
+func testAppConfig(t *testing.T) *config.AppConfig {
 	t.Helper()
 
-	app, err := NewFiberAppConfig()
+	app, err := config.New()
 	require.NoError(t, err)
 
 	return app
@@ -45,7 +48,7 @@ func Test_API(t *testing.T) {
 
 		defer res.Body.Close()
 
-		var appointments []Appointment
+		var appointments []types.Appointment
 		json.NewDecoder(res.Body).Decode(&appointments)
 
 		// assert
@@ -89,7 +92,7 @@ func Test_API(t *testing.T) {
 
 		defer res.Body.Close()
 
-		var appointments []Appointment
+		var appointments []types.Appointment
 		json.NewDecoder(res.Body).Decode(&appointments)
 
 		// assert
@@ -101,8 +104,8 @@ func Test_API(t *testing.T) {
 
 }
 
-func appointmentFake() Appointment {
-	return Appointment{
+func appointmentFake() types.Appointment {
+	return types.Appointment{
 		PatientId:       "test-patient",
 		AppointmentDate: time.Now(),
 	}
