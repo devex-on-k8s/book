@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/devex-on-k8s/book/appointments/config"
+	"github.com/devex-on-k8s/book/appointments/db"
 	"github.com/devex-on-k8s/book/appointments/types"
 )
 
@@ -17,10 +18,24 @@ import (
 func testAppConfig(t *testing.T) *config.AppConfig {
 	t.Helper()
 
-	app, err := config.New()
+	appConfig, err := config.New()
 	require.NoError(t, err)
 
-	return app
+	app := appConfig.App
+
+	// create new server instance using a new database connection
+	db, err := db.New(config.DB)
+	require.NoError(t, err)
+
+	server := NewServer(db)
+
+	// add routes
+	app.Get("/", server.Welcome)
+	app.Get("/appointments", server.GetAllAppointments)
+	app.Post("/appointments", server.CreateAppointment)
+	app.Delete("/appointments", server.DeleteAllAppointments)
+
+	return appConfig
 }
 
 func Test_API(t *testing.T) {
