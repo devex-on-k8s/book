@@ -65,7 +65,7 @@ func (s *Server) CreateAppointment(ctx fiber.Ctx) error {
 
 // Welcome returns a welcome message from the Appointments Service
 func (s *Server) Welcome(ctx fiber.Ctx) error {
-	var welcome Welcome = Welcome{
+	welcome := Welcome{
 		Message: "Welcome to the Appointments API!",
 	}
 

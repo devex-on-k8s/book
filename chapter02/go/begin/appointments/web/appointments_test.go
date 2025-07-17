@@ -24,7 +24,6 @@ func testAppConfig(t *testing.T) *config.AppConfig {
 }
 
 func Test_API(t *testing.T) {
-
 	// test server
 	appConfig := testAppConfig(t)
 	defer appConfig.StartupCancel()
@@ -54,8 +53,7 @@ func Test_API(t *testing.T) {
 		// assert
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.Equal(t, 0, len(appointments))
-
+		require.Empty(t, appointments)
 	})
 
 	t.Run("It should return 200 when a POST request is made to '/appointments'", func(t *testing.T) {
@@ -97,11 +95,10 @@ func Test_API(t *testing.T) {
 
 		// assert
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.Equal(t, len(appointments), 1)
+		require.Equal(t, 1, len(appointments))
 		require.NotEmpty(t, appointments[0].Id)
 		require.Equal(t, appointments[0].PatientId, appointment.PatientId)
 	})
-
 }
 
 func appointmentFake() types.Appointment {

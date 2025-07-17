@@ -43,7 +43,7 @@ func New(connStr string) *sql.DB {
 
 // GetAll returns all appointments.
 func GetAll(db *sql.DB) ([]types.Appointment, error) {
-	var query = "SELECT id, patientId, appointmentDate FROM Appointments a"
+	query := "SELECT id, patientId, appointmentDate FROM Appointments a"
 	var rows *sql.Rows
 	var err error
 
@@ -69,7 +69,7 @@ func GetAll(db *sql.DB) ([]types.Appointment, error) {
 
 // DeleteAll delete all appointments.
 func DeleteAll(db *sql.DB) error {
-	var deleteStmt = "DELETE FROM Appointments"
+	deleteStmt := "DELETE FROM Appointments"
 
 	var err error
 
