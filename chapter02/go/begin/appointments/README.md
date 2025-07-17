@@ -2,6 +2,10 @@
 
 This application is part of the Min Salus system and provides the functionality for managing appointments. It's part of the project built in the [Developer Experience on Kubernetes](https://www.manning.com/books/developer-experience-on-kubernetes) book by [Mauricio Salatino](https://salaboy.com) and [Thomas Vitale](https://www.thomasvitale.com).
 
+## Requirements
+
+- [httpie](https://httpie.io/cli), used for testing the HTTP API.
+
 ## HTTP API
 
 | Endpoint	      | Method   | Req. body   | Status | Resp. body     | Description    		   	              |
