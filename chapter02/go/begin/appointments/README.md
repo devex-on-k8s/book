@@ -5,6 +5,7 @@ This application is part of the Min Salus system and provides the functionality 
 ## Requirements
 
 - [httpie](https://httpie.io/cli), used for testing the HTTP API.
+- [Air](https://github.com/air-verse/air) for hot reloading the application on changes.
 
 ## HTTP API
 
@@ -41,40 +42,31 @@ http DELETE :8081/appointments
 
 ## Run
 
-First, run the services the application depends on:
+Thanks to `GoFiber`, `Testcontainers Go` and `air`, you can run the application in a containerized environment, so there is no need to install any database or other dependencies.
+
+Just run the following command to start the application:
 
 ```shell script
-podman compose up -d
+air
 ```
 
-Then, run the application:
-
-```shell script
-go run appointments.go
-```
-
-The application will start on port `8081` by default and the process will keep running. When you're done, stop the application process with `Ctrl+C` and then stop the dependent services:
-
-```shell script
-podman compose down
-```
+The application will start on port `8081` by default and the process will keep running. When you're done, stop the application process with `Ctrl+C` and the dependent services will be automatically stopped for you.
 
 ## Test
-
-First, run the services the application depends on:
-
-```shell script
-podman compose up -d
-```
 
 Run all unit and integration tests:
 
 ```shell script
-go test
+go test -tags dev ./...
 ```
 
-When you're done, stop the dependent services:
+The `-tags dev` flag is used to add to the build those files that are only used for development purposes. This application uses it to include the `config_dev.go` file, which is used to run the dependencies in a containerized environment.
 
-```shell script
-podman compose down
-```
+Thanks to `Testcontainers Go`, the started services will be automatically stopped for you.
+
+To know more about the different technologies used in this application, please refer to the following links:
+
+- [GoFiber](https://gofiber.io/)
+- [GoFiber's Services](https://docs.gofiber.io/next/api/services)
+- [Testcontainers Go](https://golang.testcontainers.org/)
+- [Testcontainers GoFiber's Contrib](https://docs.gofiber.io/contrib/testcontainers_v0.x.x/)
