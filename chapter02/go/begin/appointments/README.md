@@ -6,6 +6,7 @@ This application is part of the Min Salus system and provides the functionality 
 
 - [httpie](https://httpie.io/cli), used for testing the HTTP API.
 - [Air](https://github.com/air-verse/air) for hot reloading the application on changes.
+- [golangci-lint](https://golangci-lint.run/) for linting the code.
 
 ## HTTP API
 
@@ -38,6 +39,14 @@ Delete all appointments:
 
 ```shell script
 http DELETE :8081/appointments
+```
+
+## Lint
+
+Run the linter:
+
+```shell script
+golangci-lint run --fix -v
 ```
 
 ## Run
