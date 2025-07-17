@@ -33,7 +33,7 @@ func main() {
 	// create new server instance using a new database connection
 	db, err := db.New(config.DB)
 	if err != nil {
-		log.Fatalf("Failed to create database connection: %v", err)
+		log.Panicf("Failed to create database connection: %v", err)
 	}
 
 	server := web.NewServer(db)
