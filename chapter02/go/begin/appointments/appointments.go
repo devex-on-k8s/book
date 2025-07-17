@@ -1,84 +1,96 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 )
 
-var (
-	VERSION            = getEnv("VERSION", "0.0.1-SNAPSHOT")
-	SOURCE             = getEnv("SOURCE", "https://github.com/")
-	APP_PORT           = getEnv("APP_PORT", "8081")
-	PostgresqlHost     = getEnv("POSTGRES_HOST", "localhost")
-	PostgresqlPort     = getEnv("POSTGRES_PORT", "5432")
-	PostgresqlDatabase = getEnv("POSTGRES_DB", "postgres")
-	PostgresqlUsername = getEnv("POSTGRES_USERNAME", "postgres")
-	PostgresqlPassword = getEnv("POSTGRES_PASSWORD", "postgres")
-)
+// AppConfig holds the application configuration and cleanup functions.
+type AppConfig struct {
+	// App is the Fiber app instance.
+	App *fiber.App
 
-// respondWithJSON is a helper function to write a JSON response.
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
+	// StartupCancel is the context cancel function for the services startup.
+	StartupCancel context.CancelFunc
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
+	// ShutdownCancel is the context cancel function for the services shutdown.
+	ShutdownCancel context.CancelFunc
 }
 
 func main() {
-	chiServer := NewChiServer()
+	appConfig, err := NewFiberAppConfig()
+	if err != nil {
+		log.Fatalf("Failed to create Fiber server: %v", err)
+	}
 
-	// Start the server; this is a blocking call
-	err := http.ListenAndServe(":"+APP_PORT, chiServer)
-	log.Printf("Starting Appointments Service in Port: %s", APP_PORT)
-	if err != http.ErrServerClosed {
+	app := appConfig.App
+
+	// cancel the startup and shutdown contexts in the main function, so that
+	// the services are not left running after the main function returns.
+	defer appConfig.StartupCancel()
+	defer appConfig.ShutdownCancel()
+
+	// Listen from a different goroutine
+	go func() {
+		if err := app.Listen(fmt.Sprintf(":%v", APP_PORT)); err != nil {
+			log.Panic(err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)                    // Create channel to signify a signal being sent
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM) // When an interrupt or termination signal is sent, notify the channel
+
+	// Block the main thread until an interrupt is received
+	<-quit
+
+	log.Println("Gracefully shutting down...")
+	err = app.Shutdown()
+	if err != nil {
 		log.Panic(err)
 	}
 }
 
-// getEnv returns the value of an environment variable, or a fallback value if not set.
-func getEnv(key, fallback string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		value = fallback
+// NewFiberAppConfig creates a new Fiber server AppConfig.
+func NewFiberAppConfig() (*AppConfig, error) {
+	cfg := fiber.Config{
+		ErrorHandler: ErrorHandler,
 	}
-	return value
-}
 
-// NewChiServer creates a new Chi server.
-func NewChiServer() *chi.Mux {
-	log.Printf("Starting Appointments Service in Port: %s", APP_PORT)
+	// configure the app
+	appConfig, err := ConfigureApp(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("configure app: %w", err)
+	}
 
-	// create new router
-	r := chi.NewRouter()
+	app := appConfig.App
 
 	// add middlewares
-	r.Use(middleware.Logger)
+	app.Use(logger.New())
 
-	// connect to database
-	db := NewDB()
-
-	// create new server
-	server := NewServer(db)
+	// create new server instance using a new database connection
+	server := NewServer(NewDB())
 
 	// add routes
-	r.Get("/", server.Welcome)
-	r.Get("/appointments", server.GetAllAppointments)
-	r.Post("/appointments", server.CreateAppointment)
-	r.Delete("/appointments", server.DeleteAllAppointments)
+	app.Get("/", server.Welcome)
+	app.Get("/appointments", server.GetAllAppointments)
+	app.Post("/appointments", server.CreateAppointment)
+	app.Delete("/appointments", server.DeleteAllAppointments)
 
-	return r
+	return appConfig, nil
 }
 
 // server is the API server struct
@@ -94,7 +106,7 @@ func NewServer(db *sql.DB) *server {
 }
 
 // GetAllAppointments returns all appointments.
-func (s *server) GetAllAppointments(w http.ResponseWriter, r *http.Request) {
+func (s *server) GetAllAppointments(ctx fiber.Ctx) error {
 	var query = "SELECT id, patientId, appointmentDate FROM Appointments a"
 	var rows *sql.Rows
 	var err error
@@ -119,11 +131,12 @@ func (s *server) GetAllAppointments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Appointments retrieved from Database: %d", len(appointments))
-	respondWithJSON(w, http.StatusOK, appointments)
+
+	return ctx.JSON(appointments)
 }
 
 // DeleteAllAppointments delete all appointments.
-func (s *server) DeleteAllAppointments(w http.ResponseWriter, r *http.Request) {
+func (s *server) DeleteAllAppointments(ctx fiber.Ctx) error {
 	var deleteStmt = "DELETE FROM Appointments"
 
 	var err error
@@ -135,52 +148,47 @@ func (s *server) DeleteAllAppointments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("All Appointments deleted from Database.")
-	respondWithJSON(w, http.StatusOK, "")
+
+	return ctx.JSON(fiber.Map{
+		"message": "All Appointments deleted from Database.",
+	})
 }
 
 // CreateAppointment creates a new appointment.
-func (s *server) CreateAppointment(w http.ResponseWriter, r *http.Request) {
-	var appointment Appointment
-	err := json.NewDecoder(r.Body).Decode(&appointment)
-	if err != nil {
-		log.Printf("There was an error decoding the request body into the struct: %v", err)
-		respondWithJSON(w, http.StatusInternalServerError, err)
-		return
+func (s *server) CreateAppointment(ctx fiber.Ctx) error {
+	appointment := &Appointment{}
+	if err := ctx.Bind().Body(appointment); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("There was an error decoding the request body into the struct: %v", err))
 	}
 
 	appointment.Id = uuid.New().String()
 
 	insertStmt := `insert into Appointments(id, patientId, appointmentDate) values($1, $2, $3)`
 
-	_, err = s.DB.Exec(insertStmt, appointment.Id, appointment.PatientId, appointment.AppointmentDate)
-
+	_, err := s.DB.Exec(insertStmt, appointment.Id, appointment.PatientId, appointment.AppointmentDate)
 	if err != nil {
-		log.Printf("An error occurred while executing query: %v", err)
-		respondWithJSON(w, http.StatusInternalServerError, err)
-		return
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("An error occurred while executing query: %v", err))
 	}
 
 	log.Printf("Appointment Stored in Database: %v", appointment)
 
-	respondWithJSON(w, http.StatusOK, appointment)
-
+	return ctx.JSON(appointment)
 }
 
 // Welcome returns a welcome message from the Appointments Service
-func (s *server) Welcome(w http.ResponseWriter, r *http.Request) {
+func (s *server) Welcome(ctx fiber.Ctx) error {
 	var welcome Welcome = Welcome{
 		Message: "Welcome to the Appointments API!",
 	}
-	w.Header().Set(ContentType, ApplicationJson)
-	json.NewEncoder(w).Encode(welcome)
+
+	return ctx.JSON(welcome)
 }
 
 //go:embed db/migrations/*.sql
 var embedMigrations embed.FS
 
 func NewDB() *sql.DB {
-	connStr := "postgresql://" + PostgresqlUsername + ":" + PostgresqlPassword + "@" + PostgresqlHost + ":" + PostgresqlPort + "/" + PostgresqlDatabase + "?sslmode=disable"
-	log.Printf("Connecting to Database: %s.", connStr)
+	connStr := DB
 
 	// Open a new database connection
 	db, err := sql.Open("postgres", connStr)
