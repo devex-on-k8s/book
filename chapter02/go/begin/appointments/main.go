@@ -31,7 +31,12 @@ func main() {
 	app.Use(logger.New())
 
 	// create new server instance using a new database connection
-	server := web.NewServer(db.New(config.DB))
+	db, err := db.New(config.DB)
+	if err != nil {
+		log.Fatalf("Failed to create database connection: %v", err)
+	}
+
+	server := web.NewServer(db)
 
 	// add routes
 	app.Get("/", server.Welcome)

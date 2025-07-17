@@ -16,11 +16,11 @@ import (
 var embedMigrations embed.FS
 
 // New creates a new database connection and applies migrations.
-func New(connStr string) *sql.DB {
+func New(connStr string) (*sql.DB, error) {
 	// Open a new database connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("open database: %w", err)
 	}
 
 	// Configure goose to use embedded migrations
@@ -28,17 +28,17 @@ func New(connStr string) *sql.DB {
 
 	// Set up goose
 	if err := goose.SetDialect("postgres"); err != nil {
-		log.Fatalf("Failed to set goose dialect: %v", err)
+		return nil, fmt.Errorf("set goose dialect: %w", err)
 	}
 
 	// Run migrations
 	if err := goose.Up(db, "migrations"); err != nil {
-		log.Fatalf("Failed to apply migrations: %v", err)
+		return nil, fmt.Errorf("apply migrations: %w", err)
 	}
 
 	log.Println("SQL migrations applied successfully")
 
-	return db
+	return db, nil
 }
 
 // GetAll returns all appointments.
