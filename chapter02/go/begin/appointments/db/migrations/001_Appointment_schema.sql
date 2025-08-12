@@ -2,7 +2,7 @@
 CREATE TABLE appointments (
     id                 VARCHAR PRIMARY KEY NOT NULL,
     patientId          VARCHAR NOT NULL,
-    appointmentDate    TIMESTAMP NOT NULL DEFAULT CURRENT_DATE
+    appointmentDate    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- +goose Down
