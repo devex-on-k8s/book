@@ -12,6 +12,7 @@ kubernetes-helm.pkg-path = "kubernetes-helm"
 kustomize.pkg-path = "kustomize"
 pack.pkg-path = "pack"
 skaffold.pkg-path = "skaffold"
+ko.pkg-path = "ko"
 vscode-go-flake.flake = "github:thomasvitale/vscode-go-flake"
 
 [vars]

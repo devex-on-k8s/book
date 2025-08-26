@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17.5-alpine
+    image: docker.io/library/postgres:17.5-alpine
     restart: unless-stopped
     ports:
       - 5432:5432
