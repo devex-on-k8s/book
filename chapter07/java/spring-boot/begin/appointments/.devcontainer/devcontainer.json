@@ -1,0 +1,73 @@
+{
+  "name": "Appointments",
+
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "context": ".."
+  },
+
+  "runArgs": [
+    "--network=host"
+  ],
+
+  "containerEnv": {
+    "SPRING_AI_OLLAMA_BASE_URL": "http://host.docker.internal:11434"
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "installDockerBuildx": false,
+      "installDockerComposeSwitch": false,
+      "moby": false
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {},
+      "extensions": [
+        // Java
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack",
+
+        // YAML
+        "redhat.vscode-yaml",
+
+        // Excluding the Gradle extension as it breaks the Spring Boot DevTools
+        "-vscjava.vscode-gradle",
+        // Excluding the Container extensions. Not needed + heavyweight.
+        "-ms-azuretools.vscode-containers",
+        "-ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+
+  "mounts": [
+    // Gradle cache
+    "source=${localEnv:HOME}/.gradle,target=/home/devbox/.gradle,type=bind,consistency=cached",
+    // Maven cache
+    "source=${localEnv:HOME}/.m2,target=/home/devbox/.m2,type=bind,consistency=cached",
+    // Kubernetes config
+    "source=${localEnv:HOME}/.kube,target=/home/devbox/.kube,type=bind"
+  ],
+
+  "forwardPorts": [
+		8081
+	],
+
+  "portsAttributes": {
+    "8081": {
+      "label": "Appointments"
+    }
+  },
+
+  "otherPortsAttributes": {
+    "onAutoForward": "ignore"
+  },
+
+  "postCreateCommand": "echo 'alias podman=docker' >> ~/.bashrc && echo '127.0.0.1   localhost' | sudo tee /etc/hosts && java -version",
+
+  "remoteUser": "devbox",
+
+  "waitFor": "postCreateCommand"
+}

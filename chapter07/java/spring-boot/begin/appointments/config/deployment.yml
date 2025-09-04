@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointments
+  labels:
+    app: appointments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointments
+  template:
+    metadata:
+      labels:
+        app: appointments
+    spec:
+      containers:
+        - name: appointments
+          image: appointments:0.0.1-SNAPSHOT
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1001
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: jdbc-uri
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: password
+            - name: SPRING_AI_OLLAMA_BASE_URL
+              value: "http://ollama.ollama-system.svc.cluster.local"
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          ports:
+            - containerPort: 8081
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "1Gi"
+            limits:
+              memory: "1Gi"

@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: appointments
+  ai:
+    ollama:
+      init:
+        pull-model-strategy: when-missing
+        embedding:
+          include: false
+      chat:
+        options:
+          model: granite3.3:2b
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8081

@@ -1,0 +1,32 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: appointments
+build:
+  artifacts:
+    - image: appointments
+      custom:
+        buildCommand: ./gradlew clean bootBuildImage --imageName=$IMAGE --runImage docker.io/paketobuildpacks/ubuntu-noble-run-base -PliveReload
+        dependencies:
+          paths:
+            - build.gradle
+            - src/main/resources
+            - build/classes/java/main
+            - build/resources/main
+      sync:
+        manual:
+          - src: "src/main/resources/**/*"
+            dest: /workspace/BOOT-INF/classes
+            strip: src/main/resources/
+          - src: "build/classes/java/main/**/*"
+            dest: /workspace/BOOT-INF/classes
+            strip: build/classes/java/main/
+          - src: "build/resources/main/**/*"
+            dest: /workspace/BOOT-INF/classes
+            strip: build/resources/main/
+
+manifests:
+  rawYaml:
+  - config/db.yml
+  - config/deployment.yml
+  - config/service.yml

@@ -1,0 +1,14 @@
+[_]
+schema-version = "0.2"
+
+[io.buildpacks]
+builder = "docker.io/paketobuildpacks/builder-noble-java-tiny"
+exclude = [
+    "bin",
+    ".devbox",
+    ".devcontainer"
+]
+
+[[io.buildpacks.build.env]]
+name = "BP_JVM_VERSION"
+value = "24"

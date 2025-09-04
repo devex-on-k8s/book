@@ -1,0 +1,23 @@
+services:
+  appointments:
+    depends_on:
+      - db
+    image: ko.local/appointments:0.0.1-SNAPSHOT
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+  db:
+    image: postgres:17.5-alpine
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres

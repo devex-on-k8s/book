@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appointments
+  labels:
+    app: appointments
+spec:
+  type: ClusterIP
+  selector:
+    app: appointments
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 8081

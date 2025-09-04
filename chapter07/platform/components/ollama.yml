@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ollama-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ollama-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: ollama
+  template:
+    metadata:
+      labels:
+        name: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama
+        volumeMounts:
+          - mountPath: /root/.ollama
+            name: ollama-storage
+        ports:
+        - name: http
+          containerPort: 11434
+          protocol: TCP
+        env:
+        - name: PRELOAD_MODELS
+          value: "granite3.3:2b"
+        - name: OLLAMA_KEEP_ALIVE
+          value: "3h"
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "for model in $PRELOAD_MODELS; do ollama run $model \"\"; done"]
+      volumes:
+      - hostPath:
+          path: /opt/ollama
+          type: DirectoryOrCreate
+        name: ollama-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: ollama-system
+spec:
+  type: ClusterIP
+  selector:
+    name: ollama
+  ports:
+  - port: 80
+    name: http
+    targetPort: http
+    protocol: TCP

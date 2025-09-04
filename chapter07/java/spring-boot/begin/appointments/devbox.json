@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": [
+    "zulu24@latest",
+    "httpie@latest",
+    "kubectl@latest",
+    "skaffold@latest"
+  ],
+  "env": {
+    "DO_NOT_TRACK": "1"
+  }
+}

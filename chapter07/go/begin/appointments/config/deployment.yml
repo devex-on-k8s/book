@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointments
+  labels:
+    app: appointments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointments
+  template:
+    metadata:
+      labels:
+        app: appointments
+    spec:
+      containers:
+        - name: appointments
+          image: ko.local/appointments:0.0.1-SNAPSHOT
+          #image: ko://github.com/devex-on-k8s/book/appointments
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1001
+          env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: dbname
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-appointments-app
+                  key: password
+            - name: OLLAMA_HOST
+              value: "http://ollama.ollama-system.svc.cluster.local"
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          ports:
+            - containerPort: 8081
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "150Mi"
+            limits:
+              memory: "500Mi"

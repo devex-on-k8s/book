@@ -1,0 +1,9 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: db-appointments
+spec:
+  instances: 1
+  storage:
+    size: 250Mi
